@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: main-site-templats
+    ports:
+      - "8022:8022"
+    volumes:
+      # Монтируем всю папку проекта для hot reload
+      - .:/app
+      # Исключаем виртуальное окружение из volume (оно создается в контейнере)
+      - /app/.venv
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

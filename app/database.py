@@ -1,0 +1,88 @@
+"""База данных и модели SQLAlchemy"""
+from typing import Annotated
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session, sessionmaker
+from fastapi import Depends
+from datetime import datetime
+import json
+
+from app.config import settings
+
+# Создание движка базы данных
+engine = create_engine(
+    settings.database_url,
+    connect_args={"check_same_thread": False}  # Для SQLite
+)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+
+class Project(Base):
+    """Модель проекта"""
+    __tablename__ = "projects"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False, index=True)
+    industry = Column(String, nullable=False)
+    results = Column(Text, nullable=False)  # JSON строка со списком результатов
+    timeline = Column(String, nullable=False)
+    budget = Column(String, nullable=False)
+    benefits = Column(Text, nullable=False)
+    tech_stack = Column(Text, nullable=False)  # JSON строка со стеком технологий
+    images = Column(Text, nullable=True)  # JSON строка со списком путей к изображениям
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def get_results_list(self) -> list[str]:
+        """Получить список результатов"""
+        if self.results:
+            return json.loads(self.results)
+        return []
+
+    def set_results_list(self, results: list[str]):
+        """Установить список результатов"""
+        self.results = json.dumps(results, ensure_ascii=False)
+
+    def get_tech_stack_dict(self) -> dict:
+        """Получить словарь технологического стека"""
+        if self.tech_stack:
+            try:
+                return json.loads(self.tech_stack)
+            except (json.JSONDecodeError, TypeError):
+                # Если данные не являются валидным JSON, возвращаем пустой словарь
+                return {}
+        return {}
+
+    def set_tech_stack_dict(self, tech_stack: dict):
+        """Установить словарь технологического стека"""
+        self.tech_stack = json.dumps(tech_stack, ensure_ascii=False)
+
+    def get_images_list(self) -> list[str]:
+        """Получить список изображений"""
+        if self.images:
+            return json.loads(self.images)
+        return []
+
+    def set_images_list(self, images: list[str]):
+        """Установить список изображений"""
+        self.images = json.dumps(images, ensure_ascii=False) if images else None
+
+
+def init_db():
+    """Инициализация базы данных - создание таблиц"""
+    Base.metadata.create_all(bind=engine)
+
+
+def get_db():
+    """Получить сессию базы данных"""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+# Типизация для dependency injection
+SessionDep = Annotated[Session, Depends(get_db)]

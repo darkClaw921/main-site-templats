@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_edit %}Редактирование проекта{% else %}Создание проекта{% endif %} - Alteran{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h1>{% if is_edit %}Редактирование проекта{% else %}Создание нового проекта{% endif %}</h1>
+    
+    {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+    
+    {% if generated %}
+    <div class="alert alert-success">Проект успешно сгенерирован через LLM. Проверьте и при необходимости отредактируйте данные перед сохранением.</div>
+    {% endif %}
+    
+    {% if not is_edit %}
+    <div class="llm-generation-section">
+        <h3 class="llm-generation-title">Генерация через LLM</h3>
+        <div class="llm-generation-forms">
+            <form method="post" action="/admin/projects/generate" class="llm-generation-form">
+                <div class="llm-form-row">
+                    <textarea name="description" class="form-textarea llm-textarea" placeholder="Опишите проект для генерации..." required></textarea>
+                    <button type="submit" class="form-button llm-button">Сгенерировать по тексту</button>
+                </div>
+            </form>
+            <form method="post" action="/admin/projects/generate-from-github" class="llm-generation-form">
+                <div class="llm-form-row">
+                    <input type="text" name="github_url" class="form-input llm-input" placeholder="https://github.com/owner/repo" required>
+                    <button type="submit" class="form-button llm-button">Сгенерировать из GitHub</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+    
+    <form method="post" 
+          action="{% if is_edit %}/admin/projects/{{ project.id }}{% else %}/admin/projects{% endif %}" 
+          enctype="multipart/form-data" 
+          class="admin-form">
+        
+        <div class="form-group">
+            <label for="title" class="form-label">Название проекта *</label>
+            <input type="text" id="title" name="title" class="form-input" 
+                   value="{% if project %}{{ project.title }}{% endif %}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="industry" class="form-label">Отрасль *</label>
+            <input type="text" id="industry" name="industry" class="form-input" 
+                   value="{% if project %}{{ project.industry }}{% endif %}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="results" class="form-label">Результаты (каждый результат с новой строки) *</label>
+            <textarea id="results" name="results" class="form-textarea" required>{% if project %}{% for result in project.results %}{{ result }}
+{% endfor %}{% endif %}</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="timeline" class="form-label">Сроки *</label>
+            <input type="text" id="timeline" name="timeline" class="form-input" 
+                   value="{% if project %}{{ project.timeline }}{% endif %}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="budget" class="form-label">Бюджет *</label>
+            <input type="text" id="budget" name="budget" class="form-input" 
+                   value="{% if project %}{{ project.budget }}{% endif %}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="benefits" class="form-label">Выгода для клиента *</label>
+            <textarea id="benefits" name="benefits" class="form-textarea" required>{% if project %}{{ project.benefits }}{% endif %}</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Технологический стек</label>
+            <div id="tech-stack-container">
+                {% if project and project.tech_stack %}
+                    {% for key, value in project.tech_stack.items() %}
+                    <div class="tech-stack-item" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <input type="text" name="tech_stack_keys" class="form-input" placeholder="Название (например, Frontend)" value="{{ key }}">
+                        <textarea name="tech_stack_values" class="form-textarea tech-stack-textarea" placeholder="Значение (например, Flutter)" oninput="autoResizeTextarea(this)">{{ value }}</textarea>
+                        <button type="button" class="form-button form-button-secondary btn-small" onclick="removeTechStackItem(this)">Удалить</button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="tech-stack-item" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <input type="text" name="tech_stack_keys" class="form-input" placeholder="Название (например, Frontend)" value="Frontend">
+                        <textarea name="tech_stack_values" class="form-textarea tech-stack-textarea" placeholder="Значение (например, Flutter)" oninput="autoResizeTextarea(this)"></textarea>
+                        <button type="button" class="form-button form-button-secondary btn-small" onclick="removeTechStackItem(this)">Удалить</button>
+                    </div>
+                    <div class="tech-stack-item" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <input type="text" name="tech_stack_keys" class="form-input" placeholder="Название (например, Frontend)" value="Backend">
+                        <textarea name="tech_stack_values" class="form-textarea tech-stack-textarea" placeholder="Значение (например, Flutter)" oninput="autoResizeTextarea(this)"></textarea>
+                        <button type="button" class="form-button form-button-secondary btn-small" onclick="removeTechStackItem(this)">Удалить</button>
+                    </div>
+                    <div class="tech-stack-item" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <input type="text" name="tech_stack_keys" class="form-input" placeholder="Название (например, Frontend)" value="База данных">
+                        <textarea name="tech_stack_values" class="form-textarea tech-stack-textarea" placeholder="Значение (например, Flutter)" oninput="autoResizeTextarea(this)"></textarea>
+                        <button type="button" class="form-button form-button-secondary btn-small" onclick="removeTechStackItem(this)">Удалить</button>
+                    </div>
+                {% endif %}
+            </div>
+            <button type="button" class="form-button form-button-secondary btn-small" onclick="addTechStackItem()">Добавить технологию</button>
+        </div>
+        
+        <div class="form-group">
+            <label for="images" class="form-label">Изображения</label>
+            {% if project and project.images %}
+            <div style="margin-bottom: 1rem;">
+                <p>Существующие изображения:</p>
+                <div id="existing-images-container">
+                    {% for image in project.images %}
+                    <div class="existing-image-item" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;" data-image-path="{{ image }}">
+                        <img src="/static/{{ image }}" alt="Изображение" style="max-width: 100px; height: auto; border-radius: 4px;">
+                        <span>{{ image }}</span>
+                        <button type="button" class="form-button form-button-secondary btn-small" onclick="removeExistingImage(this)">Удалить</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                <textarea id="existing_images" name="existing_images" style="display: none;">{% for image in project.images %}{{ image }}{% if not loop.last %},{% endif %}{% endfor %}</textarea>
+            </div>
+            {% endif %}
+            <input type="file" id="images" name="images" class="form-input" multiple accept="image/*">
+            <small>Можно выбрать несколько изображений</small>
+        </div>
+        
+        <div style="display: flex; gap: 1rem;">
+            <button type="submit" class="form-button">{% if is_edit %}Сохранить изменения{% else %}Создать проект{% endif %}</button>
+            <a href="/admin/dashboard" class="form-button form-button-secondary" style="text-decoration: none; display: inline-block;">Отмена</a>
+        </div>
+    </form>
+</div>
+
+<script>
+function addTechStackItem() {
+    const container = document.getElementById('tech-stack-container');
+    const item = document.createElement('div');
+    item.className = 'tech-stack-item';
+    item.style.cssText = 'display: flex; gap: 0.5rem; margin-bottom: 0.5rem;';
+    item.innerHTML = `
+        <input type="text" name="tech_stack_keys" class="form-input" placeholder="Название (например, Frontend)">
+        <textarea name="tech_stack_values" class="form-textarea tech-stack-textarea" placeholder="Значение (например, Flutter)" oninput="autoResizeTextarea(this)"></textarea>
+        <button type="button" class="form-button form-button-secondary btn-small" onclick="removeTechStackItem(this)">Удалить</button>
+    `;
+    container.appendChild(item);
+}
+
+function autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+function removeTechStackItem(button) {
+    const container = document.getElementById('tech-stack-container');
+    if (container.children.length > 1) {
+        button.parentElement.remove();
+    } else {
+        alert('Должен остаться хотя бы один элемент технологического стека');
+    }
+}
+
+function removeExistingImage(button) {
+    const imageItem = button.closest('.existing-image-item');
+    if (!imageItem) {
+        return;
+    }
+    
+    // Удаляем элемент из DOM
+    imageItem.remove();
+    
+    // Обновляем скрытое поле existing_images
+    updateExistingImagesField();
+}
+
+function updateExistingImagesField() {
+    const container = document.getElementById('existing-images-container');
+    const hiddenField = document.getElementById('existing_images');
+    
+    if (!hiddenField) {
+        return;
+    }
+    
+    if (!container || container.children.length === 0) {
+        // Если контейнер пуст или не существует, очищаем поле
+        hiddenField.value = '';
+        return;
+    }
+    
+    const imageItems = container.querySelectorAll('.existing-image-item');
+    const imagePaths = Array.from(imageItems).map(item => item.getAttribute('data-image-path')).filter(path => path);
+    
+    hiddenField.value = imagePaths.join(',');
+}
+
+// Инициализация автоподстройки высоты для всех textarea при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    const textareas = document.querySelectorAll('.tech-stack-textarea');
+    textareas.forEach(function(textarea) {
+        autoResizeTextarea(textarea);
+    });
+});
+</script>
+{% endblock %}

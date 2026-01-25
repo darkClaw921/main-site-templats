@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Alteran - Портфолио проектов{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <h1 class="hero-title">Наши проекты</h1>
+        <p class="hero-subtitle">Реализованные решения для бизнеса</p>
+    </div>
+</div>
+
+<div class="projects-section">
+    <div class="container">
+        {% if projects %}
+            <div class="projects-grid">
+                {% for project in projects %}
+                <div class="project-card">
+                    <div class="project-header">
+                        <h2 class="project-title">{{ project.title }}</h2>
+                        <span class="project-industry">{{ project.industry }}</span>
+                    </div>
+
+                    {% if project.images %}
+                    <div class="project-images">
+                        {% for image in project.images %}
+                        <img src="/static/{{ image }}" alt="{{ project.title }}" class="project-image image-modal-trigger" data-image-src="/static/{{ image }}">
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="project-results">
+                        <h3 class="section-title">Результат</h3>
+                        <ul class="results-list">
+                            {% for result in project.results %}
+                            <li class="result-item">{{ result }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div class="project-resources">
+                        <div class="resource-item">
+                            <span class="resource-label">Сроки:</span>
+                            <span class="resource-value">{{ project.timeline }}</span>
+                        </div>
+                        <div class="resource-item">
+                            <span class="resource-label">Бюджет:</span>
+                            <span class="resource-value">{{ project.budget }}</span>
+                        </div>
+                    </div>
+
+                    {% if project.benefits %}
+                    <div class="project-benefits">
+                        <h3 class="section-title">Выгода для клиента</h3>
+                        <p class="benefits-text">{{ project.benefits }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if project.tech_stack %}
+                    <div class="project-tech-stack">
+                        <h3 class="section-title">Стек</h3>
+                        <div class="tech-stack-grid">
+                            {% for key, value in project.tech_stack.items() %}
+                            <div class="tech-item">
+                                {% set icon_path = get_tech_icon(key) %}
+                                {% if icon_path %}
+                                <div class="tech-icon">
+                                    <img src="/static/{{ icon_path }}" alt="{{ key }}" class="tech-icon-img">
+                                </div>
+                                {% endif %}
+                                <div class="tech-content">
+                                    <span class="tech-label">{{ key }}:</span>
+                                    {% if value %}
+                                    <div class="tech-tags">
+                                        {% set tech_list = value.split(',') %}
+                                        {% for tech in tech_list %}
+                                            {% set tech_clean = tech.strip() %}
+                                            {% if tech_clean %}
+                                            <span class="tech-tag">{{ tech_clean }}</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>Проекты пока не добавлены</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Модальное окно для увеличения изображений -->
+<div id="imageModal" class="image-modal">
+    <span class="image-modal-close">&times;</span>
+    <img class="image-modal-content" id="modalImage" alt="Увеличенное изображение">
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/main.js"></script>
+{% endblock %}

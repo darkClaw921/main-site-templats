@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Вход в админ-панель - Alteran{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <h1 class="login-title">Вход в админ-панель</h1>
+    
+    {% if error %}
+    <div class="alert alert-error">
+        {{ error }}
+    </div>
+    {% endif %}
+    
+    <form method="post" action="/admin/login" class="admin-form">
+        <div class="form-group">
+            <label for="password" class="form-label">Пароль</label>
+            <input type="password" id="password" name="password" class="form-input" required>
+        </div>
+        
+        <button type="submit" class="form-button">Войти</button>
+    </form>
+</div>
+{% endblock %}
