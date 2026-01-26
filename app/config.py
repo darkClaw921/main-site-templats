@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     openai_key: Optional[str] = None
     """API ключ OpenAI для генерации проектов через LLM"""
     
+    # Порт приложения
+    port: int = 8000
+    """Порт для запуска приложения"""
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=False,
