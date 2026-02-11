@@ -11,7 +11,7 @@
             <a href="/admin/logout" class="form-button form-button-secondary" style="text-decoration: none; display: inline-block; margin-left: 0.5rem;">Выйти</a>
         </div>
     </div>
-    
+
     {% if projects %}
     <table class="admin-table">
         <thead>
@@ -46,6 +46,55 @@
     <div class="empty-state">
         <p>Проекты пока не добавлены</p>
         <a href="/admin/projects/new" class="form-button" style="text-decoration: none; display: inline-block; margin-top: 1rem;">Добавить первый проект</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Секция мелких доработок -->
+<div class="admin-container" style="margin-top: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1>Мелкие доработки</h1>
+        <a href="/admin/tweaks/new" class="form-button" style="text-decoration: none; display: inline-block;">Добавить доработку</a>
+    </div>
+
+    {% if tweaks %}
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Категория</th>
+                <th>Проект</th>
+                <th>Время</th>
+                <th>Дата</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tweak in tweaks %}
+            <tr>
+                <td>{{ tweak.id }}</td>
+                <td>{{ tweak.title }}</td>
+                <td>{{ tweak_categories.get(tweak.category, tweak.category) }}</td>
+                <td>{{ tweak.project_name or '—' }}</td>
+                <td>{{ tweak.time_spent or '—' }}</td>
+                <td>{{ tweak.created_at.strftime('%d.%m.%Y') }}</td>
+                <td>
+                    <div class="admin-actions">
+                        <a href="/admin/tweaks/{{ tweak.id }}/edit" class="form-button btn-small">Редактировать</a>
+                        <form method="post" action="/admin/tweaks/{{ tweak.id }}/delete" style="display: inline;" onsubmit="return confirm('Удалить доработку?');">
+                            <button type="submit" class="form-button form-button-danger btn-small">Удалить</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <p>Доработки пока не добавлены</p>
+        <a href="/admin/tweaks/new" class="form-button" style="text-decoration: none; display: inline-block; margin-top: 1rem;">Добавить первую доработку</a>
     </div>
     {% endif %}
 </div>

@@ -70,6 +70,19 @@ class Project(Base):
         self.images = json.dumps(images, ensure_ascii=False) if images else None
 
 
+class Tweak(Base):
+    """Модель мелкой доработки"""
+    __tablename__ = "tweaks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=False)
+    category = Column(String, nullable=False)  # bug_fix, ui, optimization, feature, refactoring, other
+    project_name = Column(String, nullable=True)  # Для какого проекта (опционально)
+    time_spent = Column(String, nullable=True)  # Время выполнения ("2 часа", "1 день")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 def init_db():
     """Инициализация базы данных - создание таблиц"""
     Base.metadata.create_all(bind=engine)

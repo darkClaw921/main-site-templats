@@ -16,7 +16,10 @@ from app.routers.admin import router as admin_router
 app = FastAPI(
     title="Alteran Portfolio",
     description="Лендинг с портфолио проектов и админ-панелью",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url=False,
+    redoc_url=False
+
 )
 
 # Инициализация при старте приложения

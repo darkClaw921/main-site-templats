@@ -1,4 +1,4 @@
-"""Модуль для работы с LLM и генерации проектов"""
+"""Модуль для работы с LLM и генерации проектов и доработок"""
 from typing import Dict, Optional
 import httpx
 from openai import OpenAI
@@ -138,3 +138,70 @@ def generate_project_with_llm(description: str) -> Dict[str, str]:
         
     except Exception as e:
         raise ValueError(f"Ошибка при генерации проекта через LLM: {str(e)}")
+
+
+def generate_tweak_with_llm(description: str) -> Dict[str, str]:
+    """Генерировать мелкую доработку через LLM на основе описания"""
+    if not settings.openai_key:
+        raise ValueError("OPENAI_KEY не настроен в .env")
+
+    client = OpenAI(api_key=settings.openai_key)
+
+    prompt = f"""Ты помощник для создания описания мелкой доработки в портфолио IT-компании. На основе следующего описания создай структурированное описание доработки.
+
+Описание:
+{description}
+
+Верни ответ в формате JSON со следующими полями:
+{{
+    "title": "Краткое название доработки (до 80 символов)",
+    "description": "Подробное описание что было сделано (2-4 предложения)",
+    "category": "категория доработки",
+    "project_name": "Название проекта (если понятно из контекста, иначе null)",
+    "time_spent": "Примерное время выполнения (например, '2 часа', '1 день')"
+}}
+
+Допустимые значения для category:
+- "bug_fix" — исправление бага
+- "ui" — UI улучшение
+- "optimization" — оптимизация производительности
+- "feature" — новая небольшая функция
+- "refactoring" — рефакторинг кода
+- "other" — другое
+
+Важно:
+- Название должно быть конкретным и описывать суть доработки
+- Описание должно пояснять что именно было сделано и какой эффект
+- Категория должна точно соответствовать типу работы
+- Время должно быть реалистичным для мелкой доработки
+- Верни ТОЛЬКО валидный JSON без дополнительного текста"""
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Ты помощник для создания описаний мелких доработок. Всегда отвечаешь только валидным JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=800
+        )
+
+        content = response.choices[0].message.content.strip()
+
+        # Очистка ответа от markdown форматирования если есть
+        if content.startswith("```json"):
+            content = content[7:]
+        if content.startswith("```"):
+            content = content[3:]
+        if content.endswith("```"):
+            content = content[:-3]
+        content = content.strip()
+
+        import json
+        tweak_data = json.loads(content)
+
+        return tweak_data
+
+    except Exception as e:
+        raise ValueError(f"Ошибка при генерации доработки через LLM: {str(e)}")

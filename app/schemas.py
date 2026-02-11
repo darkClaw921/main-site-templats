@@ -48,6 +48,23 @@ class ProjectResponse(ProjectBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class TweakBase(BaseModel):
+    """Базовая схема мелкой доработки"""
+    title: str = Field(..., min_length=1, max_length=200)
+    description: str = Field(..., min_length=1)
+    category: str = Field(..., min_length=1, max_length=50)
+    project_name: Optional[str] = Field(None, max_length=200)
+    time_spent: Optional[str] = Field(None, max_length=100)
+
+
+class TweakResponse(TweakBase):
+    """Схема ответа с доработкой"""
+    id: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class LoginRequest(BaseModel):
     """Схема для входа"""
     password: str

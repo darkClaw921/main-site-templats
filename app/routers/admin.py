@@ -6,7 +6,7 @@ from typing import List, Optional
 import os
 from datetime import datetime
 
-from app.database import Project, SessionDep
+from app.database import Project, Tweak, SessionDep
 from app.auth import verify_password, ADMIN_SESSION_KEY, AdminDep
 from app.config import settings
 from app.utils import (
@@ -14,9 +14,10 @@ from app.utils import (
     parse_form_results,
     parse_form_tech_stack,
     save_uploaded_images,
-    parse_existing_images
+    parse_existing_images,
+    TWEAK_CATEGORIES,
 )
-from app.llm import generate_project_with_llm, get_github_repo_info
+from app.llm import generate_project_with_llm, generate_tweak_with_llm, get_github_repo_info
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 templates = Jinja2Templates(directory="app/templates")
@@ -61,7 +62,8 @@ async def logout(request: Request):
 async def dashboard(request: Request, db: SessionDep, admin: AdminDep):
     """Дашборд со списком проектов"""
     projects = db.query(Project).order_by(Project.created_at.desc()).all()
-    
+    tweaks = db.query(Tweak).order_by(Tweak.created_at.desc()).all()
+
     projects_data = [
         {
             "id": project.id,
@@ -71,10 +73,15 @@ async def dashboard(request: Request, db: SessionDep, admin: AdminDep):
         }
         for project in projects
     ]
-    
+
     return templates.TemplateResponse(
         "admin/dashboard.html",
-        {"request": request, "projects": projects_data}
+        {
+            "request": request,
+            "projects": projects_data,
+            "tweaks": tweaks,
+            "tweak_categories": TWEAK_CATEGORIES,
+        }
     )
 
 
@@ -319,5 +326,152 @@ async def delete_project(
     
     db.delete(project)
     db.commit()
-    
+
+    return RedirectResponse(url="/admin/dashboard", status_code=status.HTTP_302_FOUND)
+
+
+# ==================== Мелкие доработки ====================
+
+@router.get("/tweaks/new", response_class=HTMLResponse)
+async def new_tweak_form(request: Request, admin: AdminDep):
+    """Форма создания новой доработки"""
+    return templates.TemplateResponse("admin/tweak_form.html", {
+        "request": request,
+        "tweak": None,
+        "is_edit": False,
+        "tweak_categories": TWEAK_CATEGORIES,
+    })
+
+
+@router.post("/tweaks/generate", response_class=HTMLResponse)
+async def generate_tweak_from_text(
+    request: Request,
+    admin: AdminDep,
+    description: str = Form(...)
+):
+    """Генерация доработки через LLM на основе текстового описания"""
+    try:
+        if not settings.openai_key:
+            return templates.TemplateResponse("admin/tweak_form.html", {
+                "request": request,
+                "tweak": None,
+                "is_edit": False,
+                "tweak_categories": TWEAK_CATEGORIES,
+                "error": "OPENAI_KEY не настроен в .env",
+            })
+
+        generated_data = generate_tweak_with_llm(description)
+
+        # Создаём объект-заглушку для шаблона
+        class TweakData:
+            pass
+
+        tweak_data = TweakData()
+        tweak_data.title = generated_data.get("title", "")
+        tweak_data.description = generated_data.get("description", "")
+        tweak_data.category = generated_data.get("category", "other")
+        tweak_data.project_name = generated_data.get("project_name")
+        tweak_data.time_spent = generated_data.get("time_spent")
+
+        return templates.TemplateResponse("admin/tweak_form.html", {
+            "request": request,
+            "tweak": tweak_data,
+            "is_edit": False,
+            "tweak_categories": TWEAK_CATEGORIES,
+            "generated": True,
+        })
+    except Exception as e:
+        return templates.TemplateResponse("admin/tweak_form.html", {
+            "request": request,
+            "tweak": None,
+            "is_edit": False,
+            "tweak_categories": TWEAK_CATEGORIES,
+            "error": f"Ошибка при генерации: {str(e)}",
+        })
+
+
+@router.post("/tweaks")
+async def create_tweak(
+    request: Request,
+    db: SessionDep,
+    admin: AdminDep,
+    title: str = Form(...),
+    description: str = Form(...),
+    category: str = Form(...),
+    project_name: Optional[str] = Form(default=None),
+    time_spent: Optional[str] = Form(default=None),
+):
+    """Создание новой доработки"""
+    tweak = Tweak(
+        title=title,
+        description=description,
+        category=category,
+        project_name=project_name if project_name and project_name.strip() else None,
+        time_spent=time_spent if time_spent and time_spent.strip() else None,
+    )
+    db.add(tweak)
+    db.commit()
+    return RedirectResponse(url="/admin/dashboard", status_code=status.HTTP_302_FOUND)
+
+
+@router.get("/tweaks/{tweak_id}/edit", response_class=HTMLResponse)
+async def edit_tweak_form(
+    request: Request,
+    tweak_id: int,
+    db: SessionDep,
+    admin: AdminDep,
+):
+    """Форма редактирования доработки"""
+    tweak = db.query(Tweak).filter(Tweak.id == tweak_id).first()
+    if not tweak:
+        raise HTTPException(status_code=404, detail="Доработка не найдена")
+
+    return templates.TemplateResponse("admin/tweak_form.html", {
+        "request": request,
+        "tweak": tweak,
+        "is_edit": True,
+        "tweak_categories": TWEAK_CATEGORIES,
+    })
+
+
+@router.post("/tweaks/{tweak_id}")
+async def update_tweak(
+    request: Request,
+    tweak_id: int,
+    db: SessionDep,
+    admin: AdminDep,
+    title: str = Form(...),
+    description: str = Form(...),
+    category: str = Form(...),
+    project_name: Optional[str] = Form(default=None),
+    time_spent: Optional[str] = Form(default=None),
+):
+    """Обновление доработки"""
+    tweak = db.query(Tweak).filter(Tweak.id == tweak_id).first()
+    if not tweak:
+        raise HTTPException(status_code=404, detail="Доработка не найдена")
+
+    tweak.title = title
+    tweak.description = description
+    tweak.category = category
+    tweak.project_name = project_name if project_name and project_name.strip() else None
+    tweak.time_spent = time_spent if time_spent and time_spent.strip() else None
+    db.commit()
+    return RedirectResponse(url="/admin/dashboard", status_code=status.HTTP_302_FOUND)
+
+
+@router.post("/tweaks/{tweak_id}/delete")
+async def delete_tweak(
+    request: Request,
+    tweak_id: int,
+    db: SessionDep,
+    admin: AdminDep,
+):
+    """Удаление доработки"""
+    tweak = db.query(Tweak).filter(Tweak.id == tweak_id).first()
+    if not tweak:
+        raise HTTPException(status_code=404, detail="Доработка не найдена")
+
+    db.delete(tweak)
+    db.commit()
     return RedirectResponse(url="/admin/dashboard", status_code=status.HTTP_302_FOUND)

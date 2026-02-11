@@ -75,6 +75,17 @@ def parse_existing_images(existing_images: Optional[str]) -> List[str]:
     return image_paths
 
 
+# Категории мелких доработок с человекочитаемыми названиями
+TWEAK_CATEGORIES = {
+    "bug_fix": "Исправление бага",
+    "ui": "UI улучшение",
+    "optimization": "Оптимизация",
+    "feature": "Новая функция",
+    "refactoring": "Рефакторинг",
+    "other": "Другое",
+}
+
+
 def get_tech_icon(tech_category: str) -> Optional[str]:
     """Получить путь к SVG иконке для категории технологии"""
     # Нормализация названия категории (приведение к нижнему регистру)

@@ -10,91 +10,144 @@
     </div>
 </div>
 
-<div class="projects-section">
-    <div class="container">
-        {% if projects %}
-            <div class="projects-grid">
-                {% for project in projects %}
-                <div class="project-card">
-                    <div class="project-header">
-                        <h2 class="project-title">{{ project.title }}</h2>
-                        <span class="project-industry">{{ project.industry }}</span>
-                    </div>
+<!-- Вкладка: Проекты -->
+<div class="tab-content active" id="tab-projects">
+    <div class="projects-section">
+        <div class="container">
+            {% if projects %}
+                <div class="projects-grid">
+                    {% for project in projects %}
+                    <div class="project-card">
+                        <div class="project-header">
+                            <h2 class="project-title">{{ project.title }}</h2>
+                            <span class="project-industry">{{ project.industry }}</span>
+                        </div>
 
-                    {% if project.images %}
-                    <div class="project-images">
-                        {% for image in project.images %}
-                        <img src="/static/{{ image }}" alt="{{ project.title }}" class="project-image image-modal-trigger" data-image-src="/static/{{ image }}">
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-
-                    <div class="project-results">
-                        <h3 class="section-title">Результат</h3>
-                        <ul class="results-list">
-                            {% for result in project.results %}
-                            <li class="result-item">{{ result }}</li>
+                        {% if project.images %}
+                        <div class="project-images">
+                            {% for image in project.images %}
+                            <img src="/static/{{ image }}" alt="{{ project.title }}" class="project-image image-modal-trigger" data-image-src="/static/{{ image }}">
                             {% endfor %}
-                        </ul>
-                    </div>
-
-                    <div class="project-resources">
-                        <div class="resource-item">
-                            <span class="resource-label">Сроки:</span>
-                            <span class="resource-value">{{ project.timeline }}</span>
                         </div>
-                        <div class="resource-item">
-                            <span class="resource-label">Бюджет:</span>
-                            <span class="resource-value">{{ project.budget }}</span>
+                        {% endif %}
+
+                        <div class="project-results">
+                            <h3 class="section-title">Результат</h3>
+                            <ul class="results-list">
+                                {% for result in project.results %}
+                                <li class="result-item">{{ result }}</li>
+                                {% endfor %}
+                            </ul>
                         </div>
-                    </div>
 
-                    {% if project.benefits %}
-                    <div class="project-benefits">
-                        <h3 class="section-title">Выгода для клиента</h3>
-                        <p class="benefits-text">{{ project.benefits }}</p>
-                    </div>
-                    {% endif %}
+                        <div class="project-resources">
+                            <div class="resource-item">
+                                <span class="resource-label">Сроки:</span>
+                                <span class="resource-value">{{ project.timeline }}</span>
+                            </div>
+                            <div class="resource-item">
+                                <span class="resource-label">Бюджет:</span>
+                                <span class="resource-value">{{ project.budget }}</span>
+                            </div>
+                        </div>
 
-                    {% if project.tech_stack %}
-                    <div class="project-tech-stack">
-                        <h3 class="section-title">Стек</h3>
-                        <div class="tech-stack-grid">
-                            {% for key, value in project.tech_stack.items() %}
-                            <div class="tech-item">
-                                {% set icon_path = get_tech_icon(key) %}
-                                {% if icon_path %}
-                                <div class="tech-icon">
-                                    <img src="/static/{{ icon_path }}" alt="{{ key }}" class="tech-icon-img">
-                                </div>
-                                {% endif %}
-                                <div class="tech-content">
-                                    <span class="tech-label">{{ key }}:</span>
-                                    {% if value %}
-                                    <div class="tech-tags">
-                                        {% set tech_list = value.split(',') %}
-                                        {% for tech in tech_list %}
-                                            {% set tech_clean = tech.strip() %}
-                                            {% if tech_clean %}
-                                            <span class="tech-tag">{{ tech_clean }}</span>
-                                            {% endif %}
-                                        {% endfor %}
+                        {% if project.benefits %}
+                        <div class="project-benefits">
+                            <h3 class="section-title">Выгода для клиента</h3>
+                            <p class="benefits-text">{{ project.benefits }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if project.tech_stack %}
+                        <div class="project-tech-stack">
+                            <h3 class="section-title">Стек</h3>
+                            <div class="tech-stack-grid">
+                                {% for key, value in project.tech_stack.items() %}
+                                <div class="tech-item">
+                                    {% set icon_path = get_tech_icon(key) %}
+                                    {% if icon_path %}
+                                    <div class="tech-icon">
+                                        <img src="/static/{{ icon_path }}" alt="{{ key }}" class="tech-icon-img">
                                     </div>
                                     {% endif %}
+                                    <div class="tech-content">
+                                        <span class="tech-label">{{ key }}:</span>
+                                        {% if value %}
+                                        <div class="tech-tags">
+                                            {% set tech_list = value.split(',') %}
+                                            {% for tech in tech_list %}
+                                                {% set tech_clean = tech.strip() %}
+                                                {% if tech_clean %}
+                                                <span class="tech-tag">{{ tech_clean }}</span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
                                 </div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <p>Проекты пока не добавлены</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Вкладка: Мелкие доработки -->
+<div class="tab-content" id="tab-tweaks">
+    <div class="tweaks-section">
+        <div class="container">
+            {% if tweaks %}
+                <!-- Фильтр по категориям -->
+                <div class="tweaks-filters">
+                    <button class="tweak-filter active" data-category="all">Все</button>
+                    {% for cat_key, cat_name in tweak_categories.items() %}
+                        {% set cat_count = tweaks|selectattr('category', 'equalto', cat_key)|list|length %}
+                        {% if cat_count > 0 %}
+                        <button class="tweak-filter" data-category="{{ cat_key }}">
+                            {{ cat_name }} <span class="filter-count">{{ cat_count }}</span>
+                        </button>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Список доработок -->
+                <div class="tweaks-grid">
+                    {% for tweak in tweaks %}
+                    <div class="tweak-card" data-category="{{ tweak.category }}">
+                        <div class="tweak-card-header">
+                            <span class="tweak-category tweak-category--{{ tweak.category }}">
+                                {{ tweak_categories.get(tweak.category, tweak.category) }}
+                            </span>
+                            {% if tweak.time_spent %}
+                            <span class="tweak-time">{{ tweak.time_spent }}</span>
+                            {% endif %}
+                        </div>
+                        <h3 class="tweak-title">{{ tweak.title }}</h3>
+                        <p class="tweak-description">{{ tweak.description }}</p>
+                        <div class="tweak-card-footer">
+                            {% if tweak.project_name %}
+                            <span class="tweak-project">{{ tweak.project_name }}</span>
+                            {% endif %}
+                            <span class="tweak-date">{{ tweak.created_at.strftime('%d.%m.%Y') }}</span>
                         </div>
                     </div>
-                    {% endif %}
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="empty-state">
-                <p>Проекты пока не добавлены</p>
-            </div>
-        {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <p>Мелкие доработки пока не добавлены</p>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 

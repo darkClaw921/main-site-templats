@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Редактировать' if is_edit else 'Добавить' }} доработку - Alteran{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h1 style="margin-bottom: 2rem;">{{ 'Редактировать' if is_edit else 'Добавить' }} доработку</h1>
+
+    {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+
+    {% if generated %}
+    <div class="alert alert-success">Доработка успешно сгенерирована через LLM. Проверьте и при необходимости отредактируйте данные перед сохранением.</div>
+    {% endif %}
+
+    {% if not is_edit %}
+    <div class="llm-generation-section">
+        <h3 class="llm-generation-title">Генерация через LLM</h3>
+        <form method="post" action="/admin/tweaks/generate">
+            <div class="llm-form-row">
+                <textarea name="description" class="form-textarea llm-textarea" placeholder="Опишите доработку для генерации... Например: Исправил баг с авторизацией — токен не обновлялся после истечения срока" required></textarea>
+                <button type="submit" class="form-button llm-button">Сгенерировать</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <form method="post" action="{{ '/admin/tweaks/' ~ tweak.id if is_edit else '/admin/tweaks' }}" class="admin-form">
+        <div class="form-group">
+            <label class="form-label" for="title">Название</label>
+            <input type="text" id="title" name="title" class="form-input" required
+                   value="{{ tweak.title if tweak else '' }}"
+                   placeholder="Например: Исправлена ошибка авторизации">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="description">Описание</label>
+            <textarea id="description" name="description" class="form-textarea" required
+                      placeholder="Опишите что было сделано...">{{ tweak.description if tweak else '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="category">Категория</label>
+            <select id="category" name="category" class="form-input" required>
+                {% for cat_key, cat_name in tweak_categories.items() %}
+                <option value="{{ cat_key }}" {{ 'selected' if tweak and tweak.category == cat_key else '' }}>
+                    {{ cat_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="project_name">Проект (опционально)</label>
+            <input type="text" id="project_name" name="project_name" class="form-input"
+                   value="{{ tweak.project_name if tweak and tweak.project_name else '' }}"
+                   placeholder="Название проекта">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="time_spent">Время выполнения (опционально)</label>
+            <input type="text" id="time_spent" name="time_spent" class="form-input"
+                   value="{{ tweak.time_spent if tweak and tweak.time_spent else '' }}"
+                   placeholder="Например: 2 часа, 1 день">
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="form-button">{{ 'Сохранить' if is_edit else 'Добавить' }}</button>
+            <a href="/admin/dashboard" class="form-button form-button-secondary" style="text-decoration: none; display: inline-block;">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
