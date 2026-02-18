@@ -20,6 +20,7 @@ class ProjectBase(BaseModel):
     benefits: str = Field(..., min_length=1)
     tech_stack: Dict[str, str] = Field(default_factory=dict)
     images: Optional[List[str]] = None
+    github_url: Optional[str] = Field(None, max_length=500)
 
 
 class ProjectCreate(ProjectBase):
@@ -37,6 +38,7 @@ class ProjectUpdate(BaseModel):
     benefits: Optional[str] = Field(None, min_length=1)
     tech_stack: Optional[Dict[str, str]] = None
     images: Optional[List[str]] = None
+    github_url: Optional[str] = Field(None, max_length=500)
 
 
 class ProjectResponse(ProjectBase):

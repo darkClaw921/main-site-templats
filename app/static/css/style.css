@@ -175,20 +175,88 @@ body {
 }
 
 .project-card {
-    background-color: var(--bg-white);
     border-radius: 12px;
-    padding: 2rem;
-    box-shadow: var(--shadow);
-    transition: transform 0.3s, box-shadow 0.3s;
     max-width: 100%;
     overflow-wrap: break-word;
     word-wrap: break-word;
     box-sizing: border-box;
+    perspective: 1000px;
 }
 
-.project-card:hover {
+.project-card--has-github {
+    cursor: pointer;
+}
+
+.project-card:not(.flipped):hover {
     transform: translateY(-4px);
-    box-shadow: var(--shadow-hover);
+    transition: transform 0.3s;
+}
+
+/* Project card flip inner */
+.project-card-inner {
+    display: grid;
+    transform-style: preserve-3d;
+    transition: transform 0.6s ease;
+    height: 100%;
+}
+
+.project-card-front,
+.project-card-back {
+    grid-area: 1 / 1;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 12px;
+    background-color: var(--bg-white);
+    box-shadow: var(--shadow);
+}
+
+.project-card-front {
+    padding: 2rem;
+}
+
+.project-card-back {
+    transform: rotateY(180deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.project-card.flipped .project-card-inner {
+    transform: rotateY(180deg);
+}
+
+/* Project card back GitHub link */
+.project-back-github-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    transition: color 0.3s, transform 0.3s;
+}
+
+.project-back-github-link:hover {
+    color: var(--dark-green);
+    transform: scale(1.08);
+}
+
+.project-back-github-icon {
+    width: 120px;
+    height: 120px;
+}
+
+.project-back-github-icon--muted {
+    opacity: 0.15;
+    width: 100px;
+    height: 100px;
+}
+
+.project-back-no-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light);
 }
 
 .project-header {
@@ -864,7 +932,7 @@ body {
         grid-template-columns: 1fr;
     }
 
-    .project-card {
+    .project-card-front {
         padding: 1.5rem;
     }
 

@@ -27,6 +27,7 @@ def project_to_dict(project: Project) -> dict:
         "benefits": project.benefits,
         "tech_stack": tech_stack,
         "images": project.get_images_list(),
+        "github_url": project.github_url,
         "created_at": project.created_at,
         "updated_at": project.updated_at,
     }

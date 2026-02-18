@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Открытие модального окна при клике на изображение
     imageTriggers.forEach(function(trigger) {
-        trigger.addEventListener('click', function() {
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
             modal.style.display = 'flex';
             modalImg.src = this.getAttribute('data-image-src');
             modalImg.alt = this.getAttribute('alt');
@@ -170,4 +171,14 @@ document.addEventListener('DOMContentLoaded', function() {
             })(particle);
         }
     }
+
+    // ==================== Переворот карточек проектов ====================
+    var projectCards = document.querySelectorAll('.project-card--has-github');
+
+    projectCards.forEach(function(card) {
+        card.addEventListener('click', function(e) {
+            if (e.target.closest('.image-modal-trigger') || e.target.closest('a')) return;
+            card.classList.toggle('flipped');
+        });
+    });
 });

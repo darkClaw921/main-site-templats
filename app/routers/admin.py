@@ -177,7 +177,8 @@ async def generate_project_from_github(
                 "timeline": generated_data.get("timeline", ""),
                 "budget": generated_data.get("budget", ""),
                 "benefits": generated_data.get("benefits", ""),
-                "tech_stack": generated_data.get("tech_stack", {})
+                "tech_stack": generated_data.get("tech_stack", {}),
+                "github_url": github_url,
             },
             "is_edit": False,
             "generated": True
@@ -204,23 +205,25 @@ async def create_project(
     benefits: str = Form(...),
     tech_stack_keys: Optional[List[str]] = Form(default=None),
     tech_stack_values: Optional[List[str]] = Form(default=None),
-    images: List[UploadFile] = File(default=[])
+    images: List[UploadFile] = File(default=[]),
+    github_url: Optional[str] = Form(default=None),
 ):
     """Создание нового проекта"""
     ensure_upload_dir()
-    
+
     # Парсинг данных из формы
     results_list = parse_form_results(results)
     tech_stack_dict = parse_form_tech_stack(tech_stack_keys, tech_stack_values)
     image_paths = save_uploaded_images(images)
-    
+
     # Создание проекта
     project = Project(
         title=title,
         industry=industry,
         timeline=timeline,
         budget=budget,
-        benefits=benefits
+        benefits=benefits,
+        github_url=github_url if github_url and github_url.strip() else None,
     )
     project.set_results_list(results_list)
     project.set_tech_stack_dict(tech_stack_dict)
@@ -271,29 +274,31 @@ async def update_project(
     tech_stack_keys: Optional[List[str]] = Form(default=None),
     tech_stack_values: Optional[List[str]] = Form(default=None),
     images: List[UploadFile] = File(default=[]),
-    existing_images: Optional[str] = Form(default=None)
+    existing_images: Optional[str] = Form(default=None),
+    github_url: Optional[str] = Form(default=None),
 ):
     """Обновление проекта"""
     ensure_upload_dir()
-    
+
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Проект не найден")
-    
+
     # Парсинг данных из формы
     results_list = parse_form_results(results)
     tech_stack_dict = parse_form_tech_stack(tech_stack_keys, tech_stack_values)
-    
+
     # Сохранение изображений
     image_paths = parse_existing_images(existing_images)
     image_paths.extend(save_uploaded_images(images))
-    
+
     # Обновление проекта
     project.title = title
     project.industry = industry
     project.timeline = timeline
     project.budget = budget
     project.benefits = benefits
+    project.github_url = github_url if github_url and github_url.strip() else None
     project.set_results_list(results_list)
     project.set_tech_stack_dict(tech_stack_dict)
     project.set_images_list(image_paths)

@@ -32,6 +32,7 @@ class Project(Base):
     benefits = Column(Text, nullable=False)
     tech_stack = Column(Text, nullable=False)  # JSON строка со стеком технологий
     images = Column(Text, nullable=True)  # JSON строка со списком путей к изображениям
+    github_url = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -98,6 +99,7 @@ def run_migrations():
     migrations = [
         # (table, column, SQL type)
         ("tweaks", "github_url", "TEXT"),
+        ("projects", "github_url", "TEXT"),
     ]
 
     with engine.connect() as conn:
