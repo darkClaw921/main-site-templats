@@ -401,6 +401,8 @@ body {
 /* Tweaks Section */
 .tweaks-section {
     padding: 3rem 0;
+    position: relative;
+    z-index: 2;
 }
 
 /* Tweak Filters */
@@ -457,6 +459,7 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 1.25rem;
+    perspective: 1200px;
 }
 
 /* Tweak Card */
@@ -469,11 +472,79 @@ body {
     display: flex;
     flex-direction: column;
     border-left: 4px solid var(--border-color);
+    cursor: pointer;
+    transform-style: preserve-3d;
 }
 
 .tweak-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-hover);
+}
+
+.tweak-card.flipping {
+    animation: tweakFlip 1.4s ease-in-out;
+    z-index: 10;
+    pointer-events: none;
+}
+
+@keyframes tweakFlip {
+    0% {
+        transform: translateY(0) rotateY(0) scale(1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    5% {
+        transform: translateY(-30px) rotateY(0) scale(1.02);
+    }
+    20% {
+        transform: translateY(-200px) rotateY(360deg) scale(1.05);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.08);
+    }
+    40% {
+        transform: translateY(-230px) rotateY(720deg) scale(1.05);
+    }
+    60% {
+        transform: translateY(-160px) rotateY(1080deg) scale(1.03);
+    }
+    74% {
+        transform: translateY(0) rotateY(1080deg) scale(1);
+    }
+    78% {
+        transform: translateY(8px) rotateY(1080deg) scaleX(1.15) scaleY(0.85);
+        box-shadow: 0 2px 30px rgba(76, 175, 80, 0.6);
+    }
+    85% {
+        transform: translateY(-18px) rotateY(1080deg) scale(1);
+    }
+    92% {
+        transform: translateY(3px) rotateY(1080deg) scaleX(1.04) scaleY(0.96);
+    }
+    100% {
+        transform: translateY(0) rotateY(1080deg) scale(1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* Crack particles on landing (Alteran font) */
+.crack-particle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 11;
+    font-family: 'Alteran', 'Arial', sans-serif;
+    font-size: var(--crack-size, 1.2rem);
+    line-height: 1;
+    user-select: none;
+    animation: crackFly 1.8s ease-out forwards;
+}
+
+@keyframes crackFly {
+    0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(var(--crack-x), var(--crack-y)) scale(0.4) rotate(var(--crack-rot));
+    }
 }
 
 .tweak-card-header {

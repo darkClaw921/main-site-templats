@@ -96,4 +96,70 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+
+    // ==================== Анимация переворота карточек доработок ====================
+    tweakCards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            if (card.classList.contains('flipping')) return;
+
+            card.classList.add('flipping');
+
+            // Создаем частицы "треска" при приземлении (~74% от 1.4s = ~1036ms)
+            setTimeout(function() {
+                createCrackParticles(card);
+            }, 1036);
+
+            // Убираем класс после завершения анимации, отключая transition чтобы не было повторного переворота
+            card.addEventListener('animationend', function handler() {
+                card.style.transition = 'none';
+                card.classList.remove('flipping');
+                // Восстанавливаем transition в следующем кадре
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(function() {
+                        card.style.transition = '';
+                    });
+                });
+                card.removeEventListener('animationend', handler);
+            });
+        });
+    });
+
+    function createCrackParticles(card) {
+        var rect = card.getBoundingClientRect();
+        var centerX = rect.left + rect.width / 2;
+        var bottomY = rect.top + rect.height;
+        var borderColor = getComputedStyle(card).borderLeftColor;
+        var letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        var particleCount = 14;
+
+        for (var i = 0; i < particleCount; i++) {
+            var particle = document.createElement('span');
+            particle.className = 'crack-particle';
+            particle.textContent = letters.charAt(Math.floor(Math.random() * letters.length));
+
+            // Частицы разлетаются веером из нижней части карточки
+            var angle = Math.PI * 0.5 + (Math.random() - 0.5) * Math.PI * 1.4;
+            var distance = 70 + Math.random() * 130;
+            var x = Math.cos(angle) * distance;
+            var y = Math.abs(Math.sin(angle)) * distance;
+            var rotation = (Math.random() - 0.5) * 540;
+            var fontSize = 0.9 + Math.random() * 1.1;
+
+            particle.style.left = (centerX + (Math.random() - 0.5) * rect.width * 0.6) + 'px';
+            particle.style.top = bottomY + 'px';
+            particle.style.color = borderColor;
+            particle.style.setProperty('--crack-x', x + 'px');
+            particle.style.setProperty('--crack-y', y + 'px');
+            particle.style.setProperty('--crack-rot', rotation + 'deg');
+            particle.style.setProperty('--crack-size', fontSize + 'rem');
+
+            document.body.appendChild(particle);
+
+            (function(p) {
+                setTimeout(function() {
+                    if (p.parentNode) p.parentNode.removeChild(p);
+                }, 1800);
+            })(particle);
+        }
+    }
 });
