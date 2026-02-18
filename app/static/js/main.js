@@ -100,27 +100,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==================== Анимация переворота карточек доработок ====================
     tweakCards.forEach(function(card) {
         card.addEventListener('click', function() {
-            if (card.classList.contains('flipping')) return;
+            if (card.classList.contains('flipping') || card.classList.contains('flipping-back')) return;
 
-            card.classList.add('flipping');
+            var isFlipped = card.classList.contains('flipped');
+            var inner = card.querySelector('.tweak-card-inner');
 
-            // Создаем частицы "треска" при приземлении (~74% от 1.4s = ~1036ms)
-            setTimeout(function() {
-                createCrackParticles(card);
-            }, 1036);
+            if (!isFlipped) {
+                // First click: jump animation + flip to back
+                card.classList.add('flipping');
 
-            // Убираем класс после завершения анимации, отключая transition чтобы не было повторного переворота
-            card.addEventListener('animationend', function handler() {
-                card.style.transition = 'none';
-                card.classList.remove('flipping');
-                // Восстанавливаем transition в следующем кадре
-                requestAnimationFrame(function() {
-                    requestAnimationFrame(function() {
-                        card.style.transition = '';
-                    });
+                setTimeout(function() { createCrackParticles(card); }, 1036);
+
+                inner.addEventListener('animationend', function handler() {
+                    card.classList.remove('flipping');
+                    card.classList.add('flipped');
+                    inner.removeEventListener('animationend', handler);
                 });
-                card.removeEventListener('animationend', handler);
-            });
+            } else {
+                // Second click: jump animation + flip back to front
+                card.classList.add('flipping-back');
+
+                setTimeout(function() { createCrackParticles(card); }, 1036);
+
+                inner.addEventListener('animationend', function handler() {
+                    card.classList.remove('flipping-back');
+                    card.classList.remove('flipped');
+                    inner.removeEventListener('animationend', handler);
+                });
+            }
         });
     });
 
@@ -128,7 +135,8 @@ document.addEventListener('DOMContentLoaded', function() {
         var rect = card.getBoundingClientRect();
         var centerX = rect.left + rect.width / 2;
         var bottomY = rect.top + rect.height;
-        var borderColor = getComputedStyle(card).borderLeftColor;
+        var front = card.querySelector('.tweak-card-front');
+        var borderColor = getComputedStyle(front).borderLeftColor;
         var letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         var particleCount = 14;
 

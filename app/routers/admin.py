@@ -372,6 +372,7 @@ async def generate_tweak_from_text(
         tweak_data.category = generated_data.get("category", "other")
         tweak_data.project_name = generated_data.get("project_name")
         tweak_data.time_spent = generated_data.get("time_spent")
+        tweak_data.github_url = generated_data.get("github_url")
 
         return templates.TemplateResponse("admin/tweak_form.html", {
             "request": request,
@@ -400,6 +401,7 @@ async def create_tweak(
     category: str = Form(...),
     project_name: Optional[str] = Form(default=None),
     time_spent: Optional[str] = Form(default=None),
+    github_url: Optional[str] = Form(default=None),
 ):
     """Создание новой доработки"""
     tweak = Tweak(
@@ -408,6 +410,7 @@ async def create_tweak(
         category=category,
         project_name=project_name if project_name and project_name.strip() else None,
         time_spent=time_spent if time_spent and time_spent.strip() else None,
+        github_url=github_url if github_url and github_url.strip() else None,
     )
     db.add(tweak)
     db.commit()
@@ -445,6 +448,7 @@ async def update_tweak(
     category: str = Form(...),
     project_name: Optional[str] = Form(default=None),
     time_spent: Optional[str] = Form(default=None),
+    github_url: Optional[str] = Form(default=None),
 ):
     """Обновление доработки"""
     tweak = db.query(Tweak).filter(Tweak.id == tweak_id).first()
@@ -456,6 +460,7 @@ async def update_tweak(
     tweak.category = category
     tweak.project_name = project_name if project_name and project_name.strip() else None
     tweak.time_spent = time_spent if time_spent and time_spent.strip() else None
+    tweak.github_url = github_url if github_url and github_url.strip() else None
     db.commit()
     return RedirectResponse(url="/admin/dashboard", status_code=status.HTTP_302_FOUND)
 

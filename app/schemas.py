@@ -55,6 +55,7 @@ class TweakBase(BaseModel):
     category: str = Field(..., min_length=1, max_length=50)
     project_name: Optional[str] = Field(None, max_length=200)
     time_spent: Optional[str] = Field(None, max_length=100)
+    github_url: Optional[str] = Field(None, max_length=500)
 
 
 class TweakResponse(TweakBase):

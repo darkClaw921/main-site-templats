@@ -65,6 +65,13 @@
                    placeholder="Например: 2 часа, 1 день">
         </div>
 
+        <div class="form-group">
+            <label class="form-label" for="github_url">Ссылка на GitHub (опционально)</label>
+            <input type="url" id="github_url" name="github_url" class="form-input"
+                   value="{{ tweak.github_url if tweak and tweak.github_url else '' }}"
+                   placeholder="https://github.com/user/repo">
+        </div>
+
         <div style="display: flex; gap: 1rem; margin-top: 1rem;">
             <button type="submit" class="form-button">{{ 'Сохранить' if is_edit else 'Добавить' }}</button>
             <a href="/admin/dashboard" class="form-button form-button-secondary" style="text-decoration: none; display: inline-block;">Отмена</a>

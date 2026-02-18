@@ -80,12 +80,34 @@ class Tweak(Base):
     category = Column(String, nullable=False)  # bug_fix, ui, optimization, feature, refactoring, other
     project_name = Column(String, nullable=True)  # Для какого проекта (опционально)
     time_spent = Column(String, nullable=True)  # Время выполнения ("2 часа", "1 день")
+    github_url = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
 def init_db():
     """Инициализация базы данных - создание таблиц"""
     Base.metadata.create_all(bind=engine)
+    run_migrations()
+
+
+def run_migrations():
+    """Автоматические миграции — добавление недостающих колонок"""
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(engine)
+    migrations = [
+        # (table, column, SQL type)
+        ("tweaks", "github_url", "TEXT"),
+    ]
+
+    with engine.connect() as conn:
+        for table, column, col_type in migrations:
+            if table not in inspector.get_table_names():
+                continue
+            existing = [c["name"] for c in inspector.get_columns(table)]
+            if column not in existing:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"))
+                conn.commit()
 
 
 def get_db():
