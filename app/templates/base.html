@@ -11,8 +11,11 @@
     <header class="header">
         <div class="container">
             <div class="header-content">
-                <div class="logo">
-                    <span class="logo-text">Alteran</span>
+                <div class="logo-group">
+                    <div class="logo">
+                        <span class="logo-text">Alteran</span>
+                    </div>
+                    <button type="button" class="contact-btn" id="contactBtn">Связаться</button>
                 </div>
                 <nav class="nav">
                     <a href="/" class="nav-link nav-tab active" data-tab="projects">Проекты</a>
@@ -33,7 +36,25 @@
         </div>
     </footer>
 
+    <div class="contact-modal" id="contactModal" aria-hidden="true">
+        <div class="contact-modal-content" role="dialog" aria-modal="true" aria-labelledby="contactModalTitle">
+            <button type="button" class="contact-modal-close" id="contactModalClose" aria-label="Закрыть">&times;</button>
+            <h2 id="contactModalTitle" class="contact-modal-title">Контактная информация</h2>
+            <ul class="contact-list">
+                <li class="contact-item">
+                    <span class="contact-label">Почта</span>
+                    <a href="mailto:darkClaw921@yandex.ru" class="contact-value">darkClaw921@yandex.ru</a>
+                </li>
+                <li class="contact-item">
+                    <span class="contact-label">Telegram</span>
+                    <a href="https://t.me/darkClaw921" target="_blank" rel="noopener" class="contact-value">@darkClaw921</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
     <script src="/static/js/particles.js"></script>
+    <script src="/static/js/main.js"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

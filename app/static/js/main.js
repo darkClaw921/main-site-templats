@@ -44,6 +44,38 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // ==================== Модальное окно "Связаться" ====================
+    const contactBtn = document.getElementById('contactBtn');
+    const contactModal = document.getElementById('contactModal');
+    const contactClose = document.getElementById('contactModalClose');
+
+    function openContactModal() {
+        if (!contactModal) return;
+        contactModal.classList.add('active');
+        contactModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeContactModal() {
+        if (!contactModal) return;
+        contactModal.classList.remove('active');
+        contactModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
+
+    if (contactBtn) contactBtn.addEventListener('click', openContactModal);
+    if (contactClose) contactClose.addEventListener('click', closeContactModal);
+    if (contactModal) {
+        contactModal.addEventListener('click', function(e) {
+            if (e.target === contactModal) closeContactModal();
+        });
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && contactModal && contactModal.classList.contains('active')) {
+            closeContactModal();
+        }
+    });
+
     // ==================== Табы (навигация в хедере) ====================
     const navTabs = document.querySelectorAll('.nav-tab');
     const tabContents = document.querySelectorAll('.tab-content');
