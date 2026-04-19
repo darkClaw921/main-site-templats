@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    window.openMockupFlow = function(btn) {
+    function openMockupFlow(btn) {
         var raw = btn.getAttribute('data-mockups');
         if (!raw) return;
         try {
@@ -273,7 +273,16 @@ document.addEventListener('DOMContentLoaded', function() {
         mockupFlow.classList.add('open');
         mockupFlow.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
-    };
+    }
+    window.openMockupFlow = openMockupFlow;
+
+    document.addEventListener('click', function(e) {
+        var trigger = e.target.closest('[data-mockup-trigger]');
+        if (!trigger) return;
+        e.stopPropagation();
+        e.preventDefault();
+        openMockupFlow(trigger);
+    });
 
     function closeMockupFlow() {
         if (!mockupFlow) return;
