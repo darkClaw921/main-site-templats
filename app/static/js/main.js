@@ -172,12 +172,166 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // ==================== Flow макетов ====================
+    var mockupFlow = document.getElementById('mockupFlow');
+    var mockupFlowImage = document.getElementById('mockupFlowImage');
+    var mockupFlowCounter = document.getElementById('mockupFlowCounter');
+    var mockupFlowClose = mockupFlow ? mockupFlow.querySelector('.mockup-flow-close') : null;
+    var mockupFlowPrev = mockupFlow ? mockupFlow.querySelector('.mockup-flow-prev') : null;
+    var mockupFlowNext = mockupFlow ? mockupFlow.querySelector('.mockup-flow-next') : null;
+    var mockupList = [];
+    var mockupIndex = 0;
+    var mockupView = 'single';
+    var mockupPrevGridView = null;
+    var mockupFlowGrid = document.getElementById('mockupFlowGrid');
+    var mockupFlowStage = document.getElementById('mockupFlowStage');
+    var mockupFlowBack = document.getElementById('mockupFlowBack');
+    var mockupViewBtns = mockupFlow ? mockupFlow.querySelectorAll('.mockup-view-btn') : [];
+
+    function mockupSrc(p) {
+        return p.startsWith('/') ? p : '/static/' + p;
+    }
+
+    function renderMockup() {
+        if (!mockupList.length) return;
+        var isSingle = mockupView === 'single';
+
+        if (isSingle) {
+            mockupFlowStage.classList.remove('mockup-flow-stage--grid');
+            mockupFlowStage.classList.remove('grid-2', 'grid-3', 'grid-4');
+            mockupFlowImage.style.display = '';
+            mockupFlowGrid.style.display = 'none';
+            mockupFlowImage.src = mockupSrc(mockupList[mockupIndex]);
+            mockupFlowCounter.textContent = (mockupIndex + 1) + ' / ' + mockupList.length;
+            var multi = mockupList.length > 1;
+            mockupFlowPrev.style.visibility = multi ? 'visible' : 'hidden';
+            mockupFlowNext.style.visibility = multi ? 'visible' : 'hidden';
+            if (mockupFlowBack) mockupFlowBack.style.display = mockupPrevGridView ? '' : 'none';
+        } else {
+            mockupFlowStage.classList.add('mockup-flow-stage--grid');
+            mockupFlowStage.classList.remove('grid-2', 'grid-3', 'grid-4');
+            mockupFlowStage.classList.add(mockupView);
+            mockupFlowImage.style.display = 'none';
+            mockupFlowGrid.style.display = '';
+            mockupFlowPrev.style.visibility = 'hidden';
+            mockupFlowNext.style.visibility = 'hidden';
+            if (mockupFlowBack) mockupFlowBack.style.display = 'none';
+            mockupFlowGrid.innerHTML = '';
+            mockupList.forEach(function(path, i) {
+                var img = document.createElement('img');
+                img.src = mockupSrc(path);
+                img.className = 'mockup-grid-item';
+                img.alt = 'Макет ' + (i + 1);
+                img.addEventListener('click', function() {
+                    mockupIndex = i;
+                    mockupPrevGridView = mockupView;
+                    setMockupView('single');
+                });
+                mockupFlowGrid.appendChild(img);
+            });
+            mockupFlowCounter.textContent = mockupList.length + ' макетов';
+        }
+
+        mockupViewBtns.forEach(function(b) {
+            b.classList.toggle('active', b.getAttribute('data-view') === mockupView);
+        });
+    }
+
+    function setMockupView(v) {
+        mockupView = v;
+        renderMockup();
+    }
+
+    mockupViewBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            mockupPrevGridView = null;
+            setMockupView(btn.getAttribute('data-view'));
+        });
+    });
+
+    if (mockupFlowBack) {
+        mockupFlowBack.addEventListener('click', function() {
+            var target = mockupPrevGridView || 'grid-3';
+            mockupPrevGridView = null;
+            setMockupView(target);
+        });
+    }
+
+    window.openMockupFlow = function(btn) {
+        var raw = btn.getAttribute('data-mockups');
+        if (!raw) return;
+        try {
+            mockupList = JSON.parse(raw);
+        } catch (err) {
+            mockupList = [];
+        }
+        if (!mockupList.length || !mockupFlow) return;
+        mockupIndex = 0;
+        mockupView = 'single';
+        mockupPrevGridView = null;
+        renderMockup();
+        mockupFlow.classList.add('open');
+        mockupFlow.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    };
+
+    function closeMockupFlow() {
+        if (!mockupFlow) return;
+        mockupFlow.classList.remove('open');
+        mockupFlow.setAttribute('aria-hidden', 'true');
+        mockupFlowImage.src = '';
+        document.body.style.overflow = '';
+    }
+
+    function nextMockup() {
+        if (!mockupList.length || mockupView !== 'single') return;
+        mockupIndex = (mockupIndex + 1) % mockupList.length;
+        renderMockup();
+    }
+
+    function prevMockup() {
+        if (!mockupList.length || mockupView !== 'single') return;
+        mockupIndex = (mockupIndex - 1 + mockupList.length) % mockupList.length;
+        renderMockup();
+    }
+
+    if (mockupFlowClose) mockupFlowClose.addEventListener('click', closeMockupFlow);
+    if (mockupFlowPrev) mockupFlowPrev.addEventListener('click', prevMockup);
+    if (mockupFlowNext) mockupFlowNext.addEventListener('click', nextMockup);
+    if (mockupFlow) {
+        mockupFlow.addEventListener('click', function(e) {
+            if (e.target === mockupFlow || e.target === mockupFlowStage) {
+                if (mockupView === 'single' && mockupPrevGridView) {
+                    var target = mockupPrevGridView;
+                    mockupPrevGridView = null;
+                    setMockupView(target);
+                } else {
+                    closeMockupFlow();
+                }
+            }
+        });
+    }
+    document.addEventListener('keydown', function(e) {
+        if (!mockupFlow || !mockupFlow.classList.contains('open')) return;
+        if (e.key === 'Escape') {
+            if (mockupView === 'single' && mockupPrevGridView) {
+                var target = mockupPrevGridView;
+                mockupPrevGridView = null;
+                setMockupView(target);
+            } else {
+                closeMockupFlow();
+            }
+        }
+        else if (e.key === 'ArrowRight') nextMockup();
+        else if (e.key === 'ArrowLeft') prevMockup();
+    });
+
     // ==================== Переворот карточек проектов ====================
     var projectCards = document.querySelectorAll('.project-card--has-github');
 
     projectCards.forEach(function(card) {
         card.addEventListener('click', function(e) {
-            if (e.target.closest('.image-modal-trigger') || e.target.closest('a')) return;
+            if (e.target.closest('.image-modal-trigger') || e.target.closest('a') || e.target.closest('.project-mockup-btn')) return;
             card.classList.toggle('flipped');
         });
     });

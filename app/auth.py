@@ -1,11 +1,16 @@
 """Система аутентификации админа"""
 from typing import Annotated
-from fastapi import Depends, HTTPException, status, Request
+from fastapi import Depends, Request
 from app.config import settings
 
 
 # Простая проверка пароля через сессию
 ADMIN_SESSION_KEY = "admin_authenticated"
+
+
+class AdminAuthRequired(Exception):
+    """Нет сессии админа — нужно отправить на страницу входа"""
+    pass
 
 
 def verify_password(password: str) -> bool:
@@ -21,11 +26,7 @@ def check_admin_session(request: Request) -> bool:
 def require_admin(request: Request) -> bool:
     """Зависимость для защиты админских роутов"""
     if not check_admin_session(request):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Требуется аутентификация администратора",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise AdminAuthRequired()
     return True
 
 

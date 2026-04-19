@@ -15,6 +15,8 @@ from app.utils import (
     parse_form_tech_stack,
     save_uploaded_images,
     parse_existing_images,
+    save_mockups_zip,
+    parse_existing_mockups,
     TWEAK_CATEGORIES,
 )
 from app.llm import generate_project_with_llm, generate_tweak_with_llm, get_github_repo_info
@@ -206,6 +208,7 @@ async def create_project(
     tech_stack_keys: Optional[List[str]] = Form(default=None),
     tech_stack_values: Optional[List[str]] = Form(default=None),
     images: List[UploadFile] = File(default=[]),
+    mockups_zip: Optional[UploadFile] = File(default=None),
     github_url: Optional[str] = Form(default=None),
 ):
     """Создание нового проекта"""
@@ -215,6 +218,7 @@ async def create_project(
     results_list = parse_form_results(results)
     tech_stack_dict = parse_form_tech_stack(tech_stack_keys, tech_stack_values)
     image_paths = save_uploaded_images(images)
+    mockup_paths = save_mockups_zip(mockups_zip)
 
     # Создание проекта
     project = Project(
@@ -229,11 +233,13 @@ async def create_project(
     project.set_tech_stack_dict(tech_stack_dict)
     if image_paths:
         project.set_images_list(image_paths)
-    
+    if mockup_paths:
+        project.set_mockups_list(mockup_paths)
+
     db.add(project)
     db.commit()
     db.refresh(project)
-    
+
     return RedirectResponse(url="/admin/dashboard", status_code=status.HTTP_302_FOUND)
 
 
@@ -275,6 +281,8 @@ async def update_project(
     tech_stack_values: Optional[List[str]] = Form(default=None),
     images: List[UploadFile] = File(default=[]),
     existing_images: Optional[str] = Form(default=None),
+    mockups_zip: Optional[UploadFile] = File(default=None),
+    existing_mockups: Optional[str] = Form(default=None),
     github_url: Optional[str] = Form(default=None),
 ):
     """Обновление проекта"""
@@ -292,6 +300,19 @@ async def update_project(
     image_paths = parse_existing_images(existing_images)
     image_paths.extend(save_uploaded_images(images))
 
+    # Сохранение макетов — оставленные + новые из zip
+    old_mockups = set(project.get_mockups_list())
+    mockup_paths = parse_existing_mockups(existing_mockups)
+    new_mockups = save_mockups_zip(mockups_zip)
+    mockup_paths.extend(new_mockups)
+
+    # Удалить файлы макетов, которые убрали из формы
+    kept = set(mockup_paths)
+    for old_path in old_mockups - kept:
+        full_path = os.path.join("app/static", old_path)
+        if os.path.exists(full_path):
+            os.remove(full_path)
+
     # Обновление проекта
     project.title = title
     project.industry = industry
@@ -302,6 +323,7 @@ async def update_project(
     project.set_results_list(results_list)
     project.set_tech_stack_dict(tech_stack_dict)
     project.set_images_list(image_paths)
+    project.set_mockups_list(mockup_paths)
     project.updated_at = datetime.utcnow()
     
     db.commit()
@@ -328,7 +350,13 @@ async def delete_project(
         full_path = os.path.join("app/static", image_path)
         if os.path.exists(full_path):
             os.remove(full_path)
-    
+
+    # Удаление макетов
+    for mockup_path in project.get_mockups_list():
+        full_path = os.path.join("app/static", mockup_path)
+        if os.path.exists(full_path):
+            os.remove(full_path)
+
     db.delete(project)
     db.commit()
 

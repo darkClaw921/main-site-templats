@@ -4,6 +4,9 @@ from datetime import datetime
 from fastapi import UploadFile
 import os
 import shutil
+import zipfile
+import io
+import uuid
 
 from app.database import Project
 from app.config import settings
@@ -27,6 +30,7 @@ def project_to_dict(project: Project) -> dict:
         "benefits": project.benefits,
         "tech_stack": tech_stack,
         "images": project.get_images_list(),
+        "mockups": project.get_mockups_list(),
         "github_url": project.github_url,
         "created_at": project.created_at,
         "updated_at": project.updated_at,
@@ -63,6 +67,61 @@ def save_uploaded_images(images: List[UploadFile]) -> List[str]:
                 shutil.copyfileobj(image.file, buffer)
             image_paths.append(f"uploads/{filename}")
     return image_paths
+
+
+def save_mockups_zip(zip_file: Optional[UploadFile]) -> List[str]:
+    """Распаковать zip архив, сохранить PNG изображения в uploads/mockups, вернуть пути"""
+    if not zip_file or not zip_file.filename:
+        return []
+
+    mockups_dir = os.path.join(settings.upload_dir, "mockups")
+    os.makedirs(mockups_dir, exist_ok=True)
+
+    mockup_paths: List[str] = []
+    # UploadFile может быть уже в конце — сбрасываем позицию
+    try:
+        zip_file.file.seek(0)
+    except Exception:
+        pass
+    content = zip_file.file.read()
+    if not content:
+        return []
+
+    batch_id = datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:6]
+
+    with zipfile.ZipFile(io.BytesIO(content)) as zf:
+        # Сортировка для стабильного порядка отображения
+        names = sorted(n for n in zf.namelist() if not n.endswith("/"))
+        idx = 0
+        for name in names:
+            base = os.path.basename(name)
+            if not base:
+                continue
+            if base.startswith("._"):
+                # macOS metadata
+                continue
+            if not base.lower().endswith(".png"):
+                continue
+            safe_name = base.replace("\\", "_").replace("/", "_")
+            filename = f"{batch_id}_{idx:04d}_{safe_name}"
+            idx += 1
+            file_path = os.path.join(mockups_dir, filename)
+            with zf.open(name) as src, open(file_path, "wb") as dst:
+                shutil.copyfileobj(src, dst)
+            mockup_paths.append(f"uploads/mockups/{filename}")
+
+    return mockup_paths
+
+
+def parse_existing_mockups(existing_mockups: Optional[str]) -> List[str]:
+    """Парсинг существующих макетов из строки формы"""
+    paths: List[str] = []
+    if existing_mockups:
+        for p in existing_mockups.replace("\n", ",").split(","):
+            p = p.strip()
+            if p:
+                paths.append(p)
+    return paths
 
 
 def parse_existing_images(existing_images: Optional[str]) -> List[str]:

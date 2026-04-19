@@ -32,6 +32,7 @@ class Project(Base):
     benefits = Column(Text, nullable=False)
     tech_stack = Column(Text, nullable=False)  # JSON строка со стеком технологий
     images = Column(Text, nullable=True)  # JSON строка со списком путей к изображениям
+    mockups = Column(Text, nullable=True)  # JSON строка со списком путей к макетам (из zip архива)
     github_url = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -70,6 +71,19 @@ class Project(Base):
         """Установить список изображений"""
         self.images = json.dumps(images, ensure_ascii=False) if images else None
 
+    def get_mockups_list(self) -> list[str]:
+        """Получить список макетов"""
+        if self.mockups:
+            try:
+                return json.loads(self.mockups)
+            except (json.JSONDecodeError, TypeError):
+                return []
+        return []
+
+    def set_mockups_list(self, mockups: list[str]):
+        """Установить список макетов"""
+        self.mockups = json.dumps(mockups, ensure_ascii=False) if mockups else None
+
 
 class Tweak(Base):
     """Модель мелкой доработки"""
@@ -100,6 +114,7 @@ def run_migrations():
         # (table, column, SQL type)
         ("tweaks", "github_url", "TEXT"),
         ("projects", "github_url", "TEXT"),
+        ("projects", "mockups", "TEXT"),
     ]
 
     with engine.connect() as conn:

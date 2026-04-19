@@ -114,6 +114,30 @@
         </div>
 
         <div class="form-group">
+            <label for="mockups_zip" class="form-label">Макеты (ZIP с PNG)</label>
+            {% if project and project.mockups %}
+            <div style="margin-bottom: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                    <p style="margin: 0;">Существующие макеты:</p>
+                    <button type="button" class="form-button form-button-secondary btn-small" onclick="removeAllMockups()">Удалить все макеты</button>
+                </div>
+                <div id="existing-mockups-container">
+                    {% for mockup in project.mockups %}
+                    <div class="existing-mockup-item" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;" data-mockup-path="{{ mockup }}">
+                        <img src="/static/{{ mockup }}" alt="Макет" style="max-width: 100px; height: auto; border-radius: 4px;">
+                        <span>{{ mockup }}</span>
+                        <button type="button" class="form-button form-button-secondary btn-small" onclick="removeExistingMockup(this)">Удалить</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                <textarea id="existing_mockups" name="existing_mockups" style="display: none;">{% for m in project.mockups %}{{ m }}{% if not loop.last %},{% endif %}{% endfor %}</textarea>
+            </div>
+            {% endif %}
+            <input type="file" id="mockups_zip" name="mockups_zip" class="form-input" accept=".zip,application/zip">
+            <small>ZIP архив с PNG изображениями макетов. Новые макеты добавляются к существующим.</small>
+        </div>
+
+        <div class="form-group">
             <label for="images" class="form-label">Изображения</label>
             {% if project and project.images %}
             <div style="margin-bottom: 1rem;">
@@ -180,6 +204,33 @@ function removeExistingImage(button) {
     
     // Обновляем скрытое поле existing_images
     updateExistingImagesField();
+}
+
+function removeExistingMockup(button) {
+    const item = button.closest('.existing-mockup-item');
+    if (!item) return;
+    item.remove();
+    updateExistingMockupsField();
+}
+
+function removeAllMockups() {
+    if (!confirm('Удалить все существующие макеты? После сохранения их нельзя будет восстановить.')) return;
+    const container = document.getElementById('existing-mockups-container');
+    if (container) container.innerHTML = '';
+    updateExistingMockupsField();
+}
+
+function updateExistingMockupsField() {
+    const container = document.getElementById('existing-mockups-container');
+    const hiddenField = document.getElementById('existing_mockups');
+    if (!hiddenField) return;
+    if (!container || container.children.length === 0) {
+        hiddenField.value = '';
+        return;
+    }
+    const items = container.querySelectorAll('.existing-mockup-item');
+    const paths = Array.from(items).map(i => i.getAttribute('data-mockup-path')).filter(p => p);
+    hiddenField.value = paths.join(',');
 }
 
 function updateExistingImagesField() {

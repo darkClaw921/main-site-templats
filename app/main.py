@@ -1,13 +1,15 @@
 """Главный файл FastAPI приложения"""
 import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import settings
 from app.database import init_db
+from app.auth import AdminAuthRequired
 from app.routers.projects import router as projects_router
 from app.routers.admin import router as admin_router
 
@@ -50,6 +52,12 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 # Подключение роутеров
 app.include_router(projects_router)
 app.include_router(admin_router)
+
+
+@app.exception_handler(AdminAuthRequired)
+async def admin_auth_redirect(request: Request, exc: AdminAuthRequired):
+    """Редирект на страницу входа при отсутствии сессии админа"""
+    return RedirectResponse(url="/admin/login", status_code=302)
 
 
 @app.get("/health")

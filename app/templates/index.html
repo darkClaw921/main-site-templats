@@ -23,6 +23,21 @@
                                 <div class="project-header">
                                     <h2 class="project-title">{{ project.title }}</h2>
                                     <span class="project-industry">{{ project.industry }}</span>
+                                    {% if project.mockups %}
+                                    <button type="button"
+                                            class="project-mockup-btn"
+                                            title="Посмотреть макет"
+                                            aria-label="Посмотреть макет"
+                                            data-mockups='{{ project.mockups | tojson }}'
+                                            onclick="event.stopPropagation(); openMockupFlow(this);">
+                                        <svg class="project-mockup-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                                            <polyline points="21 15 16 10 5 21"/>
+                                        </svg>
+                                        <span class="project-mockup-label">Макет</span>
+                                    </button>
+                                    {% endif %}
                                 </div>
 
                                 {% if project.images %}
@@ -194,6 +209,36 @@
 <div id="imageModal" class="image-modal">
     <span class="image-modal-close">&times;</span>
     <img class="image-modal-content" id="modalImage" alt="Увеличенное изображение">
+</div>
+
+<!-- Flow макетов -->
+<div id="mockupFlow" class="mockup-flow" aria-hidden="true">
+    <button type="button" class="mockup-flow-close" aria-label="Закрыть">&times;</button>
+    <button type="button" class="mockup-flow-back" id="mockupFlowBack" aria-label="Назад к сетке" title="Назад к сетке" style="display:none;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <span>К сетке</span>
+    </button>
+    <div class="mockup-flow-view-toggle" role="group" aria-label="Режим просмотра">
+        <button type="button" class="mockup-view-btn active" data-view="single" aria-label="По одному" title="По одному">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        </button>
+        <button type="button" class="mockup-view-btn" data-view="grid-2" aria-label="Сетка 2" title="Сетка 2">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/></svg>
+        </button>
+        <button type="button" class="mockup-view-btn" data-view="grid-3" aria-label="Сетка 3" title="Сетка 3">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5.5" height="18" rx="1"/><rect x="9.25" y="3" width="5.5" height="18" rx="1"/><rect x="15.5" y="3" width="5.5" height="18" rx="1"/></svg>
+        </button>
+        <button type="button" class="mockup-view-btn" data-view="grid-4" aria-label="Сетка 4" title="Сетка 4">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+        </button>
+    </div>
+    <button type="button" class="mockup-flow-prev" aria-label="Предыдущий">&#10094;</button>
+    <div class="mockup-flow-stage" id="mockupFlowStage">
+        <img class="mockup-flow-image" id="mockupFlowImage" alt="Макет">
+        <div class="mockup-flow-grid" id="mockupFlowGrid"></div>
+    </div>
+    <button type="button" class="mockup-flow-next" aria-label="Следующий">&#10095;</button>
+    <div class="mockup-flow-counter" id="mockupFlowCounter"></div>
 </div>
 {% endblock %}
 
